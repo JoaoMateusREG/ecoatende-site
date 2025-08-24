@@ -24,7 +24,7 @@ export default function App() {
       {/* Header Minimalista */}
       <header className='fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10'>
         <div className='flex items-center justify-between px-4 md:px-8 py-4 max-w-7xl mx-auto'>
-          <img src={'/EcoAtende-branco.png'} alt="logo" className='w-24 md:w-32 h-6 md:h-8' />
+          <img src={'/EcoAtende-branco.png'} alt="logo" className='w-20 md:w-28 h-7 md:h-9' />
           <nav className='hidden md:flex items-center gap-8'>
             <a href="#inicio" className='text-white/70 hover:text-white transition-colors'>Início</a>
             <a href="#precos" className='text-white/70 hover:text-white transition-colors'>Preços</a>
