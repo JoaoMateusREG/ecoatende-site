@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+/* Rolagem suave e compensação do header fixo */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 74px; /* Compensa a altura do header fixo */
+}
+
+*{
+  box-sizing: border-box;
+  font-family: 'verdana', sans-serif;
+}
+
+.root {
+  margin: 0;
+  padding: 0;
+  background-color: #1b337c;
+  font: 'verdana', sans-serif;
+}
