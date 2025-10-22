@@ -138,7 +138,7 @@ export default function LoginCadastro() {
 
       } else {
         // --- REQUISIÇÃO POST PARA CADASTRO ---
-        const response = await axios.post('/auth/register', { // Altere o endpoint se necessário
+        await axios.post('/auth/register', { // Altere o endpoint se necessário
           cpf: cleanedCpf,
           password: password,
           name: nome,
