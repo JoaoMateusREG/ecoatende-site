@@ -1,4 +1,5 @@
 import './App.css'
+import { Link } from 'react-router-dom';
 
 export default function App() {
   const handleWhatsAppSubmit = (e: React.FormEvent) => {
@@ -34,6 +35,9 @@ export default function App() {
           <a href='#contato' className='px-4 md:px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-white/90 transition-all text-sm md:text-base'>
             Teste Gratuitamente
           </a>
+           <Link to='/login' className='px-4 md:px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-white/90 transition-all text-sm md:text-base'>
+            Login/Cadastre-se
+          </Link>
         </div>
       </header>
 
