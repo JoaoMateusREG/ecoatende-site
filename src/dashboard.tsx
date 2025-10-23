@@ -139,6 +139,8 @@ export default function Dashboard() {
         const orgData = getOrganizationData();
         setOrganizationData(orgData);
         
+        console.log("Dados da organização carregados:", orgData);
+        
         // 2. Verificar se temos os dados necessários
         if (!orgData.customerId) {
           setError("⚠️ Organização não possui customerId configurado. Entre em contato com o suporte para configurar a integração com o Asaas.");
@@ -146,8 +148,12 @@ export default function Dashboard() {
           return;
         }
         
-        // 3. Verificar se temos subscription ID
-        if (!orgData.subscriptionId) {
+        // 3. Verificar se temos subscription ID (está no array subscription)
+        const subscriptionId = orgData.subscription && orgData.subscription.length > 0 ? orgData.subscription[0].id : null;
+        console.log("Subscription ID encontrado:", subscriptionId);
+        console.log("Array subscription:", orgData.subscription);
+        
+        if (!subscriptionId) {
           setError("⚠️ Organização não possui subscriptionId configurado. Entre em contato com o suporte para configurar a integração com o Asaas.");
           setLoading(false);
           return;
@@ -161,9 +167,9 @@ export default function Dashboard() {
             // 1. Dados do Cliente
             asaasApi.get(`/customers/${orgData.customerId}`),
             // 2. Detalhes da Assinatura
-            asaasApi.get(`/subscriptions/${orgData.subscriptionId}`),
+            asaasApi.get(`/subscriptions/${subscriptionId}`),
             // 3. Pagamentos da Assinatura
-            asaasApi.get(`/subscriptions/${orgData.subscriptionId}/payments`),
+            asaasApi.get(`/subscriptions/${subscriptionId}/payments`),
         ]);
 
         setUserData(customerResponse.data);
