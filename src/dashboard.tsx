@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { User, ClipboardList, DollarSign, Calendar, ArrowRight, X } from 'lucide-react';
+import { User, ClipboardList, DollarSign, Calendar, ArrowRight, X, LogOut } from 'lucide-react';
 import axios from 'axios';
-import api from './axiosConfig';
+import { useNavigate } from 'react-router-dom';
 
 // ===================================================================
 //              *** CONFIGURAÇÕES DA API ***
@@ -10,23 +10,34 @@ import api from './axiosConfig';
 // URL base da API (usando sandbox para desenvolvimento)
 const BASE_URL = 'https://api-sandbox.asaas.com/v3';
 
-// Função para buscar dados da organização
-const fetchOrganizationData = async () => {
+// API Key do sandbox (extraída do axiosConfig.ts)
+const SANDBOX_API_KEY = 'aact_hmlg_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjRlMDY2NDY1LThjMjktNGVjOS1hMGQyLTVkNmUzNGVmYmYzZDo6JGFhY2hfZGFjMjk0MzgtZDc1MS00NDgwLTgwOGMtZDBjNThhN2NiMTA0';
+
+// Função para buscar dados da organização do localStorage
+const getOrganizationData = () => {
   try {
-    const response = await api.get('/auth/organization');
-    return response.data;
+    const storedData = localStorage.getItem('organizationData');
+    if (!storedData) {
+      throw new Error('Dados da organização não encontrados. Faça login novamente.');
+    }
+    return JSON.parse(storedData);
   } catch (error) {
-    console.error('Erro ao buscar dados da organização:', error);
+    console.error('Erro ao recuperar dados da organização:', error);
     throw error;
   }
 };
 
-// Função para criar instância do axios com dados da organização
-const createAsaasApi = (organizationData: any) => {
+// Função para limpar dados do localStorage
+const clearOrganizationData = () => {
+  localStorage.removeItem('organizationData');
+};
+
+// Função para criar instância do axios com API key do sandbox
+const createAsaasApi = () => {
   return axios.create({
     baseURL: BASE_URL,
     headers: {
-      'access_token': organizationData.apiKey,
+      'access_token': SANDBOX_API_KEY,
       'Content-Type': 'application/json',
     },
   });
@@ -95,6 +106,13 @@ export default function Dashboard() {
   const [organizationData, setOrganizationData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  
+  // Função para fazer logout
+  const handleLogout = () => {
+    clearOrganizationData();
+    navigate('/login');
+  };
   
   /**
    * Mapeamento de status para cores
@@ -112,26 +130,33 @@ export default function Dashboard() {
 
   /**
    * Lógica de Carregamento de Dados da API do Asaas
-   * Primeiro busca os dados da organização, depois usa esses dados para buscar informações do Asaas.
+   * Usa os dados da organização armazenados no localStorage após o login.
    */
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Primeiro, buscar dados da organização
-        const orgData = await fetchOrganizationData();
+        // 1. Recuperar dados da organização do localStorage
+        const orgData = getOrganizationData();
         setOrganizationData(orgData);
         
         // 2. Verificar se temos os dados necessários
-        if (!orgData.apiKey || !orgData.customerId || !orgData.subscriptionId) {
-          setError("⚠️ Erro de Configuração: Dados da organização incompletos. Verifique se a organização possui API_KEY, customerId e subscriptionId.");
+        if (!orgData.customerId) {
+          setError("⚠️ Organização não possui customerId configurado. Entre em contato com o suporte para configurar a integração com o Asaas.");
           setLoading(false);
           return;
         }
         
-        // 3. Criar instância do axios com dados da organização
-        const asaasApi = createAsaasApi(orgData);
+        // 3. Verificar se temos subscription ID
+        if (!orgData.subscriptionId) {
+          setError("⚠️ Organização não possui subscriptionId configurado. Entre em contato com o suporte para configurar a integração com o Asaas.");
+          setLoading(false);
+          return;
+        }
         
-        // 4. Buscar dados do Asaas usando os dados da organização
+        // 4. Criar instância do axios com API key do sandbox
+        const asaasApi = createAsaasApi();
+        
+        // 5. Buscar dados do Asaas usando os dados da organização
         const [customerResponse, subscriptionResponse, paymentsResponse] = await Promise.all([
             // 1. Dados do Cliente
             asaasApi.get(`/customers/${orgData.customerId}`),
@@ -150,7 +175,7 @@ export default function Dashboard() {
         // Tratamento de erro da API
         const errorMessage = err.response && err.response.data && err.response.data.errors 
                              ? err.response.data.errors.map((e: any) => e.description).join(', ')
-                             : "Erro desconhecido na API. Verifique o console.";
+                             : err.message || "Erro desconhecido na API. Verifique o console.";
         
         console.error("Erro na API:", err.response ? err.response.data : err.message);
         setError(`Falha ao carregar dados. Detalhe: ${errorMessage}`);
@@ -176,7 +201,7 @@ export default function Dashboard() {
             <X size={48} className='text-red-500 mb-4' />
             <h2 className='text-2xl font-bold text-red-500 mb-2'>Erro de Conexão</h2>
             <p className='text-white/70 text-center'>{error}</p>
-            <p className='text-xs text-white/50 mt-4'>Verifique se a organização possui os dados necessários (API Key, customerId, subscriptionId).</p>
+            <p className='text-xs text-white/50 mt-4'>Verifique se a organização possui os dados necessários (customerId, subscriptionId).</p>
         </div>
     );
   }
@@ -184,9 +209,18 @@ export default function Dashboard() {
   return (
     <div className="bg-black text-white min-h-screen pt-24 pb-12 px-4 md:px-8">
       <div className='max-w-7xl mx-auto'>
-        <h1 className='text-4xl font-bold mb-8 md:mb-12'>
-          Dashboard - {organizationData?.name || 'Conta'}
-        </h1>
+        <div className='flex justify-between items-center mb-8 md:mb-12'>
+          <h1 className='text-4xl font-bold'>
+            Dashboard - {organizationData?.name || 'Conta'}
+          </h1>
+          <button
+            onClick={handleLogout}
+            className='flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors'
+          >
+            <LogOut size={20} />
+            Sair
+          </button>
+        </div>
 
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
           

@@ -128,13 +128,33 @@ export default function LoginCadastro() {
           password: password,
         });
 
-        // Simulação de uso de token ou dados do usuário
         console.log("Login bem-sucedido:", response.data);
         
-        // Exemplo: Armazenar token no localStorage/Contexto e redirecionar
-        // localStorage.setItem('token', response.data.token); 
-        
-        navigate('/dashboard'); // Redirecionar para a dashboard
+        // Buscar dados da organização após login bem-sucedido
+        try {
+          const orgResponse = await axios.get('/auth/organization');
+          const organizationData = orgResponse.data;
+          
+          console.log("Dados da organização:", organizationData);
+          
+          // Armazenar dados da organização no localStorage
+          localStorage.setItem('organizationData', JSON.stringify(organizationData));
+          
+          // Verificar se customerId existe
+          if (!organizationData.customerId) {
+            setError("Organização não possui customerId configurado. Entre em contato com o suporte.");
+            setLoading(false);
+            return;
+          }
+          
+          navigate('/dashboard'); // Redirecionar para a dashboard
+          
+        } catch (orgError: any) {
+          console.error("Erro ao buscar dados da organização:", orgError);
+          setError("Erro ao carregar dados da organização. Tente novamente.");
+          setLoading(false);
+          return;
+        }
 
       } else {
         // --- REQUISIÇÃO POST PARA CADASTRO ---
