@@ -14,7 +14,6 @@ interface InputFieldProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
   maxLength?: number;
-  // Novo prop para CPF
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
@@ -34,7 +33,7 @@ const InputField: React.FC<InputFieldProps> = ({ label, id, type, placeholder, v
           id={id}
           value={value}
           onChange={onChange}
-          onBlur={onBlur} // Adiciona onBlur para formatação de CPF
+          onBlur={onBlur}
           required={required}
           maxLength={maxLength}
           className='w-full px-4 md:px-6 py-3 md:py-4 bg-white/10 border border-white/20 rounded-lg md:rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-blue-500 text-sm md:text-lg pr-12' 
@@ -56,7 +55,7 @@ const InputField: React.FC<InputFieldProps> = ({ label, id, type, placeholder, v
 };
 // ----------------------------------------------------
 
-// Funções utilitárias para CPF
+// Funções utilitárias para formatação
 const formatCpf = (value: string) => {
   const cleaned = value.replace(/\D/g, "");
   return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
@@ -66,32 +65,68 @@ const cleanCpf = (value: string) => {
   return value.replace(/\D/g, "");
 };
 
+const formatCnpj = (value: string) => {
+  const cleaned = value.replace(/\D/g, "");
+  return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+};
+
+const formatPhone = (value: string) => {
+  const cleaned = value.replace(/\D/g, "");
+  if (cleaned.length <= 10) {
+    return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  }
+  return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+};
+
 // Componente Principal de Login e Cadastro
 export default function LoginCadastro() {
   const [isLogin, setIsLogin] = useState(true);
-  const [cpf, setCpf] = useState(''); // Alterado de 'email' para 'cpf'
+  const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [nome, setNome] = useState('');
+  
+  // Estados para dados da organização (cadastro)
+  const [cnpj, setCnpj] = useState('');
+  const [organizationName, setOrganizationName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Função que lida com a alteração do input e formata
+  // Handlers de formatação
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const formatted = formatCpf(value);
     setCpf(formatted);
   };
   
-  // Função que limpa o CPF ao sair do foco (opcional, mas bom para validação)
   const handleCpfBlur = () => {
-    // Garante que o estado está formatado corretamente
     const cleaned = cleanCpf(cpf);
     if (cleaned.length === 11) {
       setCpf(formatCpf(cleaned));
     }
   };
 
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const formatted = formatCnpj(value);
+    setCnpj(formatted);
+  };
+
+  const handleCnpjBlur = () => {
+    const cleaned = cleanCpf(cnpj);
+    if (cleaned.length === 14) {
+      setCnpj(formatCnpj(cleaned));
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const formatted = formatPhone(value);
+    setPhone(formatted);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,10 +148,40 @@ export default function LoginCadastro() {
       return;
     }
 
-    if (!isLogin && !nome.trim()) {
-      setError("O nome é obrigatório para o cadastro.");
-      setLoading(false);
-      return;
+    if (!isLogin) {
+      // Validações adicionais para cadastro
+      const cleanedCnpj = cleanCpf(cnpj);
+      const cleanedPhone = cleanCpf(phone);
+
+      if (!nome.trim()) {
+        setError("O nome do administrador é obrigatório.");
+        setLoading(false);
+        return;
+      }
+
+      if (cleanedCnpj.length !== 14) {
+        setError("Por favor, insira um CNPJ válido (14 dígitos).");
+        setLoading(false);
+        return;
+      }
+
+      if (!organizationName.trim()) {
+        setError("O nome da organização é obrigatório.");
+        setLoading(false);
+        return;
+      }
+
+      if (!email.trim() || !email.includes('@')) {
+        setError("Por favor, insira um e-mail válido.");
+        setLoading(false);
+        return;
+      }
+
+      if (cleanedPhone.length < 10 || cleanedPhone.length > 11) {
+        setError("Por favor, insira um telefone válido.");
+        setLoading(false);
+        return;
+      }
     }
     // -------------------------
 
@@ -147,7 +212,7 @@ export default function LoginCadastro() {
             return;
           }
           
-          navigate('/dashboard'); // Redirecionar para a dashboard
+          navigate('/dashboard');
           
         } catch (orgError: any) {
           console.error("Erro ao buscar dados da organização:", orgError);
@@ -158,14 +223,37 @@ export default function LoginCadastro() {
 
       } else {
         // --- REQUISIÇÃO POST PARA CADASTRO ---
-        await axios.post('/auth/register', { // Altere o endpoint se necessário
-          cpf: cleanedCpf,
-          password: password,
-          name: nome,
-        });
+        const cleanedCnpj = cleanCpf(cnpj);
+        const cleanedPhone = cleanCpf(phone);
+
+        const payload = {
+          organization: {
+            cnpj: cleanedCnpj,
+            name: organizationName,
+            email: email,
+            phone: cleanedPhone
+          },
+          adm: {
+            cpf: cleanedCpf,
+            name: nome,
+            password: password,
+            organizationCnpj: cleanedCnpj,
+            role: "ADMIN"
+          }
+        };
+
+        await axios.post('/site/organization/adm', payload);
 
         alert("Cadastro realizado com sucesso! Faça o login.");
-        setIsLogin(true); // Após cadastro, volta para a tela de login
+        setIsLogin(true);
+        // Limpar todos os campos
+        setCpf('');
+        setPassword('');
+        setNome('');
+        setCnpj('');
+        setOrganizationName('');
+        setEmail('');
+        setPhone('');
       }
     } catch (err: any) {
       const apiError = err.response?.data?.error || 'Erro na comunicação com o servidor. Tente novamente.';
@@ -204,39 +292,117 @@ export default function LoginCadastro() {
         {/* Formulário */}
         <form onSubmit={handleSubmit} className='space-y-4 md:space-y-6'>
           
-          {/* Campo NOME (Apenas para Cadastro) */}
+          {/* Campos do CADASTRO */}
           {!isLogin && (
-            <InputField
-              label="Nome Completo"
-              id="nome"
-              type="text"
-              placeholder="Seu nome completo ou nome da empresa"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-            />
+            <>
+              {/* Seção: Dados da Organização */}
+              <div className="space-y-4">
+                <h3 className="text-lg md:text-xl font-semibold text-white/90 border-b border-white/10 pb-2">
+                  Dados da Organização
+                </h3>
+                
+                <InputField
+                  label="CNPJ"
+                  id="cnpj"
+                  type="text"
+                  placeholder="00.000.000/0000-00"
+                  value={cnpj}
+                  onChange={handleCnpjChange}
+                  onBlur={handleCnpjBlur}
+                  maxLength={18}
+                />
+
+                <InputField
+                  label="Nome da Organização"
+                  id="organizationName"
+                  type="text"
+                  placeholder="Nome da empresa ou organização"
+                  value={organizationName}
+                  onChange={(e) => setOrganizationName(e.target.value)}
+                />
+
+                <InputField
+                  label="E-mail da Organização"
+                  id="email"
+                  type="email"
+                  placeholder="contato@empresa.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+
+                <InputField
+                  label="Telefone"
+                  id="phone"
+                  type="text"
+                  placeholder="(00) 00000-0000"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  maxLength={15}
+                />
+              </div>
+
+              {/* Seção: Dados do Administrador */}
+              <div className="space-y-4 pt-4">
+                <h3 className="text-lg md:text-xl font-semibold text-white/90 border-b border-white/10 pb-2">
+                  Dados do Administrador
+                </h3>
+                
+                <InputField
+                  label="Nome Completo"
+                  id="nome"
+                  type="text"
+                  placeholder="Seu nome completo"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                />
+
+                <InputField
+                  label="CPF"
+                  id="cpf"
+                  type="text"
+                  placeholder="000.000.000-00"
+                  value={cpf}
+                  onChange={handleCpfChange}
+                  onBlur={handleCpfBlur}
+                  maxLength={14}
+                />
+
+                <InputField
+                  label="Senha"
+                  id="password"
+                  type="password"
+                  placeholder="********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            </>
           )}
 
-          {/* Campo CPF (Substitui E-mail) */}
-          <InputField
-            label="CPF"
-            id="cpf"
-            type="text"
-            placeholder="000.000.000-00"
-            value={cpf}
-            onChange={handleCpfChange}
-            onBlur={handleCpfBlur}
-            maxLength={14}
-          />
+          {/* Campos do LOGIN */}
+          {isLogin && (
+            <>
+              <InputField
+                label="CPF"
+                id="cpf"
+                type="text"
+                placeholder="000.000.000-00"
+                value={cpf}
+                onChange={handleCpfChange}
+                onBlur={handleCpfBlur}
+                maxLength={14}
+              />
 
-          {/* Campo SENHA */}
-          <InputField
-            label="Senha"
-            id="password"
-            type="password"
-            placeholder="********"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+              <InputField
+                label="Senha"
+                id="password"
+                type="password"
+                placeholder="********"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </>
+          )}
 
           {/* Botão de Ação Principal */}
           <button
@@ -267,14 +433,18 @@ export default function LoginCadastro() {
           <button
             onClick={() => {
               setIsLogin(!isLogin);
-              // Limpar campos ao trocar de modo
+              // Limpar todos os campos ao trocar de modo
               setCpf('');
               setPassword('');
               setNome('');
+              setCnpj('');
+              setOrganizationName('');
+              setEmail('');
+              setPhone('');
               setError(null);
               setLoading(false);
             }}
-            className='text-sm md:text-base text-white/70 hover:text-blue-400 transition-colors focus:outline-none'
+            className='text-sm md:text-base text-white/70 hover:text-blue-400 transition-colors focus:outline-none cursor-pointer'
           >
             {isLogin 
               ? 'Não tem uma conta? Cadastre-se agora!' 

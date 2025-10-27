@@ -23,23 +23,26 @@ export default function App() {
   return (
     <div className="bg-black text-white w-full h-full">
       {/* Header Minimalista */}
-      <header className='fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10'>
-        <div className='flex items-center justify-between px-4 md:px-8 py-4 max-w-7xl mx-auto'>
-          <img src={'/EcoAtende-branco.png'} alt="logo" className='w-20 md:w-28 h-7 md:h-9' />
-          <nav className='hidden md:flex items-center gap-8'>
-            <a href="#inicio" className='text-white/70 hover:text-white transition-colors'>Início</a>
-            <a href="#precos" className='text-white/70 hover:text-white transition-colors'>Preços</a>
-            <a href="#sobre" className='text-white/70 hover:text-white transition-colors'>Sobre</a>
-            <a href="#contato" className='text-white/70 hover:text-white transition-colors'>Contato</a>
-          </nav>
-          <a href='#contato' className='px-4 md:px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-white/90 transition-all text-sm md:text-base'>
-            Teste Gratuitamente
-          </a>
-           <Link to='/login' className='px-4 md:px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-white/90 transition-all text-sm md:text-base'>
-            Login/Cadastre-se
-          </Link>
-        </div>
-      </header>
+<header className='fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10'>
+  <div className='grid grid-cols-3 items-center px-4 md:px-8 py-4 max-w-7xl mx-auto'>
+    <div className='flex justify-start'>
+      <img src={'/EcoAtende-branco.png'} alt="logo" className='w-20 md:w-28 h-7 md:h-9' />
+    </div>
+    
+    <nav className='hidden md:flex items-center justify-center gap-8'>
+      <a href="#inicio" className='text-white/70 hover:text-white transition-colors'>Início</a>
+      <a href="#precos" className='text-white/70 hover:text-white transition-colors'>Preços</a>
+      <a href="#sobre" className='text-white/70 hover:text-white transition-colors'>Sobre</a>
+      <a href="#contato" className='text-white/70 hover:text-white transition-colors'>Contato</a>
+    </nav>
+    
+    <div className='flex justify-end'>
+      <Link to='/login' className='px-4 md:px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-white/90 transition-all text-sm md:text-base'>
+        Login / Teste Grátis
+      </Link>
+    </div>
+  </div>
+</header>
 
       {/* Seção Início */}
       <section id="inicio" className='pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-8'>
@@ -58,9 +61,9 @@ export default function App() {
           </div>
           
           <div className='flex flex-col sm:flex-row gap-4 justify-center items-center px-4'>
-            <a href='#contato' className='w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-white text-black font-semibold rounded-lg hover:bg-white/90 transition-all text-sm md:text-base'>
+            <Link to='/login' className='w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-white text-black font-semibold rounded-lg hover:bg-white/90 transition-all text-sm md:text-base'>
               Teste Gratuitamente
-            </a>
+            </Link>
             <a href='#contato' className='w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 border border-white/20 text-white hover:bg-white/10 rounded-lg transition-all text-sm md:text-base'>
               Fale conosco
             </a>
