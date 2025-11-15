@@ -4,7 +4,6 @@ import {
   ClipboardList,
   DollarSign,
   Calendar,
-  ArrowRight,
   X,
   LogOut,
   ExternalLink,
@@ -137,9 +136,9 @@ export default function Dashboard() {
     setSubscribing(true);
     try {
       const customer = user?.organization?.customerId;
-      
+
       const response = await axios.post("/subscriptions/gateway", {
-        customer: customer
+        customer: customer,
       });
 
       // Atualiza os dados após criar a assinatura
@@ -148,7 +147,10 @@ export default function Dashboard() {
         window.location.reload();
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || "Erro ao criar assinatura";
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Erro ao criar assinatura";
       alert(`Erro: ${errorMessage}`);
     } finally {
       setSubscribing(false);
@@ -161,17 +163,21 @@ export default function Dashboard() {
 
     setUpdatingStatus(true);
     try {
-      const newStatus = subscription.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-      
+      const newStatus =
+        subscription.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+
       await axios.put(`/subscriptions/${subscription.id}`, {
         status: newStatus,
-        subscriptionId: subscription.id
+        subscriptionId: subscription.id,
       });
 
       // Recarrega os dados após atualizar
       window.location.reload();
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || "Erro ao atualizar status";
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Erro ao atualizar status";
       alert(`Erro: ${errorMessage}`);
     } finally {
       setUpdatingStatus(false);
@@ -284,7 +290,7 @@ export default function Dashboard() {
             {user?.organization?.name || "Conta"}
           </h1>
           <div className="flex gap-4">
-            {(!subscription || (subscription && subscription.status !== "ACTIVE")) && (
+            {!subscription && (
               <button
                 onClick={() => setShowModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/30 transition-colors"
@@ -307,7 +313,9 @@ export default function Dashboard() {
           <div className="lg:col-span-1 bg-white/5 rounded-xl p-6 border border-white/10 shadow-lg h-min">
             <div className="flex items-center gap-3 mb-4 border-b border-white/10 pb-3">
               <User size={24} className="text-blue-400" />
-              <h2 className="text-xl font-semibold">Dados do estabelecimento</h2>
+              <h2 className="text-xl font-semibold">
+                Dados do estabelecimento
+              </h2>
             </div>
 
             <div className="space-y-4 text-sm md:text-base">
@@ -397,13 +405,6 @@ export default function Dashboard() {
                   Nenhuma assinatura encontrada.
                 </p>
               )}
-
-              <div className="mt-6 pt-4 border-t border-white/10">
-                <button className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors font-medium text-sm">
-                  Gerenciar Pagamento
-                  <ArrowRight size={16} />
-                </button>
-              </div>
             </div>
 
             <div className="bg-white/5 rounded-xl p-6 border border-white/10 shadow-lg">
@@ -469,7 +470,10 @@ export default function Dashboard() {
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 hover:bg-blue-500/20 hover:text-blue-200 transition-all text-xs font-medium backdrop-blur-sm shadow-sm"
                               >
-                                <ExternalLink size={14} className="text-blue-300" />
+                                <ExternalLink
+                                  size={14}
+                                  className="text-blue-300"
+                                />
                                 <span>Comprovante</span>
                               </a>
                             ) : (
@@ -479,14 +483,17 @@ export default function Dashboard() {
                             )}
                           </td>
                           <td className="p-3 text-sm">
-                            {p.invoiceUrl ? (
+                            {p.invoiceUrl && !p.transactionReceiptUrl ? (
                               <a
                                 href={p.invoiceUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 hover:bg-blue-500/20 hover:text-blue-200 transition-all text-xs font-medium backdrop-blur-sm shadow-sm"
                               >
-                                <ExternalLink size={14} className="text-blue-300" />
+                                <ExternalLink
+                                  size={14}
+                                  className="text-blue-300"
+                                />
                                 <span>Checkout</span>
                               </a>
                             ) : (
@@ -511,7 +518,9 @@ export default function Dashboard() {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gradient-to-br from-gray-900 to-black border border-white/20 rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-white">Confirmar Assinatura</h3>
+              <h3 className="text-2xl font-bold text-white">
+                Confirmar Assinatura
+              </h3>
               <button
                 onClick={() => setShowModal(false)}
                 className="text-white/50 hover:text-white transition-colors"
@@ -533,29 +542,27 @@ export default function Dashboard() {
                   {user?.organization?.cnpj}
                 </p>
               </div>
-               <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                 <p className="text-sm text-white/60 mb-2">Ciclo de pagamento</p>
-                <p className="text-white font-mono text-sm">
-                  MENSAL
-                </p>
+                <p className="text-white font-mono text-sm">MENSAL</p>
               </div>
-               <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <p className="text-sm text-white/60 mb-2">Métodos de pagamento</p>
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-sm text-white/60 mb-2">
+                  Métodos de pagamento
+                </p>
                 <p className="text-white font-mono text-sm">
                   Boleto, PIX e Cartão de Crédito
                 </p>
               </div>
               <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                 <p className="text-sm text-white/60 mb-2">Primeiro pagamento</p>
-                <p className="text-white font-mono text-sm">
-                  Hoje
-                </p>
+                <p className="text-white font-mono text-sm">Hoje</p>
               </div>
               <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <p className="text-sm text-white/60 mb-2">Valor da assinatura</p>
-                <p className="text-white font-mono text-sm">
-                  R$ 99,00
+                <p className="text-sm text-white/60 mb-2">
+                  Valor da assinatura
                 </p>
+                <p className="text-white font-mono text-sm">R$ 99,00</p>
               </div>
             </div>
 
@@ -593,7 +600,9 @@ export default function Dashboard() {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gradient-to-br from-gray-900 to-black border border-white/20 rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-white">Gerenciar Assinatura</h3>
+              <h3 className="text-2xl font-bold text-white">
+                Gerenciar Assinatura
+              </h3>
               <button
                 onClick={() => setShowEditModal(false)}
                 className="text-white/50 hover:text-white transition-colors"
@@ -605,7 +614,9 @@ export default function Dashboard() {
             <div className="space-y-4 mb-8">
               <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                 <p className="text-sm text-white/60 mb-2">ID da Assinatura</p>
-                <p className="text-white font-mono text-sm">{subscription.id}</p>
+                <p className="text-white font-mono text-sm">
+                  {subscription.id}
+                </p>
               </div>
 
               <div className="bg-white/5 rounded-lg p-4 border border-white/10">
