@@ -6,7 +6,6 @@ interface User {
   cpf: string;
   name: string;
   organizationCnpj: string;
-  isActive: boolean;
   role: string;
   picture?: string;
   services: Array<{
@@ -14,11 +13,15 @@ interface User {
     name: string;
     prefix: string;
   }>;
+  isActive: boolean;  
   organization?: {
     cnpj: string;
     name: string;
     email: string;
+    phone: string;
+    creationDate: string;
     customerId?: string;
+    active: boolean;
   };
 }
 

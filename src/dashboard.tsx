@@ -57,14 +57,6 @@ interface SubscriptionData extends OrganizationEntity {
   payments: Payment[];
 }
 
-interface SubscriptionPreview {
-  billingType: string;
-  cycle: string;
-  customer: string;
-  value: number;
-  nextDueDate: string;
-}
-
 const formatDate = (dateString: string) => {
   if (!dateString) return "N/A";
   const parts = dateString.includes("/") ? dateString.split("/") : [];
@@ -132,8 +124,8 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
-  const [inactivating, setInactivating] = useState(false); // NOVO: Estado para a inativação
-  const [subscriptionPreview, setSubscriptionPreview] = useState<SubscriptionPreview | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -141,10 +133,8 @@ export default function Dashboard() {
     navigate("/login");
   };
 
-  const handleOpenModal = async () => {
-    setShowModal(true);
+  const handleSubscribe = async () => {
     setSubscribing(true);
-    
     try {
       const customer = user?.organization?.customerId;
       
@@ -152,70 +142,48 @@ export default function Dashboard() {
         customer: customer
       });
 
-      if (response.data) {
-        setSubscriptionPreview(response.data);
+      // Atualiza os dados após criar a assinatura
+      if (response.status === 200 || response.status === 201) {
+        // Recarrega os dados
+        window.location.reload();
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || "Erro ao obter dados da assinatura";
+      const errorMessage = err.response?.data?.message || err.message || "Erro ao criar assinatura";
       alert(`Erro: ${errorMessage}`);
-      setShowModal(false);
     } finally {
       setSubscribing(false);
+      setShowModal(false);
     }
   };
 
-  const handleConfirmSubscribe = async () => {
-    // Fecha o modal e recarrega a página, pois a assinatura já foi criada
-    window.location.reload();
-  };
-  
-  // NOVO: Função para inativar a assinatura
-  const handleInactivateSubscription = async () => {
-    if (!subscription || !subscription.id) {
-      alert("Erro: Assinatura não encontrada ou ID ausente.");
-      return;
-    }
+  const handleUpdateStatus = async () => {
+    if (!subscription) return;
 
-    if (!window.confirm("Tem certeza que deseja inativar esta assinatura? Esta ação pode ser irreversível dependendo da sua regra de negócio.")) {
-      return;
-    }
-
-    setInactivating(true); 
-
+    setUpdatingStatus(true);
     try {
-      const subscriptionId = subscription.id;
-      const payload = {
-        status: "INACTIVE",
-        subscriptionId: subscriptionId,
-      };
+      const newStatus = subscription.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+      
+      await axios.put(`/subscriptions/${subscription.id}`, {
+        status: newStatus,
+        subscriptionId: subscription.id
+      });
 
-      // Requisição PUT para a rota /subscription/:id
-      const backendUrl = `/subscription/${subscriptionId}`;
-      const response = await axios.put(backendUrl, payload);
-
-      if (response.status === 200 || response.status === 204) {
-        // Atualiza o estado da assinatura, mantendo os dados antigos
-        setSubscription(prevSub => prevSub ? { ...prevSub, status: "INACTIVE" } : null);
-        alert("Assinatura inativada com sucesso!");
-      } else {
-         alert(`A inativação foi processada, mas a resposta não foi a esperada. Status: ${response.status}`);
-      }
-
+      // Recarrega os dados após atualizar
+      window.location.reload();
     } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.message || err.message || "Erro desconhecido ao inativar a assinatura";
-      alert(`Falha ao inativar a assinatura: ${errorMessage}`);
+      const errorMessage = err.response?.data?.message || err.message || "Erro ao atualizar status";
+      alert(`Erro: ${errorMessage}`);
     } finally {
-      setInactivating(false); 
+      setUpdatingStatus(false);
+      setShowEditModal(false);
     }
   };
-  // FIM NOVO
 
   const statusColorMap: { [key: string]: string } = {
     ACTIVE: "text-green-400 bg-green-500/20",
     PENDING: "text-yellow-400 bg-yellow-500/20",
     CANCELED: "text-red-400 bg-red-500/20",
-    INACTIVE: "text-gray-400 bg-gray-500/20", // Cor para o novo status
+    INACTIVE: "text-gray-400 bg-gray-500/20",
     PAID: "text-green-400 bg-green-500/20",
     RECEIVED: "text-green-400 bg-green-500/20",
     CONFIRMED: "text-green-400 bg-green-500/20",
@@ -318,7 +286,7 @@ export default function Dashboard() {
           <div className="flex gap-4">
             {(!subscription || (subscription && subscription.status !== "ACTIVE")) && (
               <button
-                onClick={handleOpenModal}
+                onClick={() => setShowModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/30 transition-colors"
               >
                 <Pen size={20} />
@@ -374,15 +342,26 @@ export default function Dashboard() {
                     Detalhes da Assinatura
                   </h2>
                 </div>
-                {subscription && (
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${
-                      statusColorMap[subscription.status]
-                    }`}
-                  >
-                    {formatStatus(subscription.status)}
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {subscription && (
+                    <>
+                      <button
+                        onClick={() => setShowEditModal(true)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors text-sm"
+                      >
+                        <Pen size={16} />
+                        Gerenciar
+                      </button>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${
+                          statusColorMap[subscription.status]
+                        }`}
+                      >
+                        {formatStatus(subscription.status)}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
 
               {subscription ? (
@@ -419,30 +398,12 @@ export default function Dashboard() {
                 </p>
               )}
 
-              {/* AQUI ESTÁ A NOVIDADE: Botão de Inativar e Gerenciar Pagamento lado a lado */}
-              <div className="mt-6 pt-4 border-t border-white/10 flex justify-between items-center">
-                {subscription && subscription.status === "ACTIVE" && (
-                  <button
-                    onClick={handleInactivateSubscription}
-                    disabled={inactivating}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {inactivating ? (
-                      <span className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <X size={16} />
-                    )}
-                    {inactivating ? "Inativando..." : "Inativar Assinatura"}
-                  </button>
-                )}
-                <button 
-                  className={`flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors font-medium text-sm ${subscription && subscription.status === "ACTIVE" ? "" : "ml-auto"}`}
-                >
+              <div className="mt-6 pt-4 border-t border-white/10">
+                <button className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors font-medium text-sm">
                   Gerenciar Pagamento
                   <ArrowRight size={16} />
                 </button>
               </div>
-              {/* FIM DA NOVIDADE */}
             </div>
 
             <div className="bg-white/5 rounded-xl p-6 border border-white/10 shadow-lg">
@@ -554,79 +515,161 @@ export default function Dashboard() {
               <button
                 onClick={() => setShowModal(false)}
                 className="text-white/50 hover:text-white transition-colors"
-                disabled={subscribing}
               >
                 <X size={24} />
               </button>
             </div>
 
-            {subscribing ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mb-4" />
-                <p className="text-white/70">Carregando dados da assinatura...</p>
+            <div className="space-y-4 mb-8">
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-sm text-white/60 mb-2">Cliente</p>
+                <p className="text-white font-mono text-sm">
+                  {user?.organization?.name}
+                </p>
               </div>
-            ) : subscriptionPreview ? (
-              <>
-                <div className="space-y-4 mb-8">
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                    <p className="text-sm text-white/60 mb-2">Cliente</p>
-                    <p className="text-white font-mono text-sm">
-                      {subscriptionPreview.customer}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                    <p className="text-sm text-white/60 mb-2">CNPJ</p>
-                    <p className="text-white font-mono text-sm">
-                      {user?.organization?.cnpj}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                    <p className="text-sm text-white/60 mb-2">Ciclo de pagamento</p>
-                    <p className="text-white font-mono text-sm">
-                      {subscriptionPreview.cycle.toUpperCase()}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                    <p className="text-sm text-white/60 mb-2">Método de pagamento</p>
-                    <p className="text-white font-mono text-sm">
-                      {formatBillingType(subscriptionPreview.billingType)}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                    <p className="text-sm text-white/60 mb-2">Próximo vencimento</p>
-                    <p className="text-white font-mono text-sm">
-                      {formatDate(subscriptionPreview.nextDueDate)}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                    <p className="text-sm text-white/60 mb-2">Valor da assinatura</p>
-                    <p className="text-white font-mono text-sm">
-                      {formatCurrency(subscriptionPreview.value)}
-                    </p>
-                  </div>
-                </div>
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-sm text-white/60 mb-2">CNPJ</p>
+                <p className="text-white font-mono text-sm">
+                  {user?.organization?.cnpj}
+                </p>
+              </div>
+               <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-sm text-white/60 mb-2">Ciclo de pagamento</p>
+                <p className="text-white font-mono text-sm">
+                  MENSAL
+                </p>
+              </div>
+               <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-sm text-white/60 mb-2">Métodos de pagamento</p>
+                <p className="text-white font-mono text-sm">
+                  Boleto, PIX e Cartão de Crédito
+                </p>
+              </div>
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-sm text-white/60 mb-2">Primeiro pagamento</p>
+                <p className="text-white font-mono text-sm">
+                  Hoje
+                </p>
+              </div>
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-sm text-white/60 mb-2">Valor da assinatura</p>
+                <p className="text-white font-mono text-sm">
+                  R$ 99,00
+                </p>
+              </div>
+            </div>
 
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowModal(false)}
-                    className="flex-1 px-4 py-3 bg-white/5 text-white border border-white/10 rounded-lg hover:bg-white/10 transition-colors font-medium"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleConfirmSubscribe}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
-                  >
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="flex-1 px-4 py-3 bg-white/5 text-white border border-white/10 rounded-lg hover:bg-white/10 transition-colors font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSubscribe}
+                disabled={subscribing}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {subscribing ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
                     <Check size={20} />
                     Confirmar
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-red-400">Erro ao carregar dados da assinatura</p>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição de Status */}
+      {showEditModal && subscription && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-gray-900 to-black border border-white/20 rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-white">Gerenciar Assinatura</h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-white/50 hover:text-white transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-sm text-white/60 mb-2">ID da Assinatura</p>
+                <p className="text-white font-mono text-sm">{subscription.id}</p>
               </div>
-            )}
+
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-sm text-white/60 mb-2">Status Atual</p>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase ${
+                    statusColorMap[subscription.status]
+                  }`}
+                >
+                  {formatStatus(subscription.status)}
+                </span>
+              </div>
+
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-sm text-white/60 mb-2">Novo Status</p>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase ${
+                    subscription.status === "ACTIVE"
+                      ? statusColorMap["INACTIVE"]
+                      : statusColorMap["ACTIVE"]
+                  }`}
+                >
+                  {subscription.status === "ACTIVE" ? "Inativa" : "Ativa"}
+                </span>
+              </div>
+
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                <p className="text-yellow-400 text-sm">
+                  {subscription.status === "ACTIVE"
+                    ? "⚠️ Ao desativar, a assinatura será suspensa e não gerará novas cobranças."
+                    : "✓ Ao ativar, a assinatura voltará a gerar cobranças normalmente."}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 px-4 py-3 bg-white/5 text-white border border-white/10 rounded-lg hover:bg-white/10 transition-colors font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleUpdateStatus}
+                disabled={updatingStatus}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
+                  subscription.status === "ACTIVE"
+                    ? "bg-red-500 hover:bg-red-600 text-white"
+                    : "bg-green-500 hover:bg-green-600 text-white"
+                }`}
+              >
+                {updatingStatus ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <Check size={20} />
+                    {subscription.status === "ACTIVE" ? "Desativar" : "Ativar"}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
