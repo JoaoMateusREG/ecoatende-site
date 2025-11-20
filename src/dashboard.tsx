@@ -446,7 +446,7 @@ export default function Dashboard() {
                         >
                           <td className="p-3 text-sm font-mono">{p.id}</td>
                           <td className="p-3 text-sm">
-                            {formatDate(p.dateCreated)}
+                            {formatDate(p.dueDate)}
                           </td>
                           <td className="p-3 text-sm font-semibold">
                             {formatCurrency(p.value)}
