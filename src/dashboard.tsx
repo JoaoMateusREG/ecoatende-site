@@ -58,12 +58,21 @@ interface SubscriptionData extends OrganizationEntity {
 
 const formatDate = (dateString: string) => {
   if (!dateString) return "N/A";
-  const parts = dateString.includes("/") ? dateString.split("/") : [];
-  const date =
-    parts.length === 3
-      ? new Date(`${parts[2]}-${parts[1]}-${parts[0]}`)
-      : new Date(dateString);
-
+  
+  // Se a data já está no formato dd/mm/yyyy
+  if (dateString.includes("/")) {
+    return dateString;
+  }
+  
+  // Se a data está no formato ISO (yyyy-mm-dd)
+  const parts = dateString.split("-");
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
+  }
+  
+  // Fallback: tenta converter normalmente
+  const date = new Date(dateString + "T00:00:00");
   if (isNaN(date.getTime())) return dateString;
   return date.toLocaleDateString("pt-BR");
 };
@@ -74,7 +83,7 @@ const formatCurrency = (amount: number) => {
 };
 
 const formatBillingType = (type: string | null | undefined) => {
-  if (!type) return "Não Definido";
+  if (!type) return "Todos";
 
   switch (type) {
     case "BOLETO":
@@ -84,7 +93,7 @@ const formatBillingType = (type: string | null | undefined) => {
     case "PIX":
       return "Pix";
     case "UNDEFINED":
-      return "Não Definido";
+      return "Todos";
     default:
       const formatted = type.toLowerCase().replace(/_/g, " ");
       return formatted.charAt(0).toUpperCase() + formatted.slice(1);
@@ -125,6 +134,8 @@ export default function Dashboard() {
   const [subscribing, setSubscribing] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [subscriptionCreated, setSubscriptionCreated] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -143,8 +154,9 @@ export default function Dashboard() {
 
       // Atualiza os dados após criar a assinatura
       if (response.status === 200 || response.status === 201) {
-        // Recarrega os dados
-        window.location.reload();
+        setSubscriptionCreated(true);
+        setShowModal(false);
+        setShowSuccessModal(true);
       }
     } catch (err: any) {
       const errorMessage =
@@ -152,10 +164,13 @@ export default function Dashboard() {
         err.message ||
         "Erro ao criar assinatura";
       alert(`Erro: ${errorMessage}`);
-    } finally {
       setSubscribing(false);
       setShowModal(false);
     }
+  };
+
+  const handleReload = () => {
+    window.location.reload();
   };
 
   const handleUpdateStatus = async () => {
@@ -290,7 +305,7 @@ export default function Dashboard() {
             {user?.organization?.name || "Conta"}
           </h1>
           <div className="flex gap-4 justify-end md:justify-start">
-            {!subscription && (
+            {!subscription && !subscriptionCreated && (
               <button
                 onClick={() => setShowModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/30 transition-colors"
@@ -679,6 +694,35 @@ export default function Dashboard() {
                     {subscription.status === "ACTIVE" ? "Desativar" : "Ativar"}
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Sucesso */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-green-900/50 to-black border border-green-500/30 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
+                <Check size={32} className="text-green-400" />
+              </div>
+              
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-3">
+                Assinatura Criada com Sucesso!
+              </h3>
+              
+              <p className="text-white/70 text-sm sm:text-base mb-6">
+                Sua assinatura foi criada. Atualize a página para visualizar os detalhes da sua nova assinatura.
+              </p>
+
+              <button
+                onClick={handleReload}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+              >
+                <Check size={20} />
+                Atualizar Página
               </button>
             </div>
           </div>
