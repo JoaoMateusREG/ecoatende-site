@@ -1,7 +1,10 @@
 import './App.css'
+import { useState } from 'react';
+import { Menu, X } from "lucide-react";
 import { Link } from 'react-router-dom';
 
 export default function App() {
+  const [open, setOpen] = useState(false);
   const handleWhatsAppSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const form = document.getElementById('contactForm') as HTMLFormElement;
@@ -24,25 +27,53 @@ export default function App() {
     <div className="bg-black text-white w-full h-full">
       {/* Header Minimalista */}
 <header className='fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10'>
-  <div className='grid grid-cols-3 items-center px-4 md:px-8 py-4 max-w-7xl mx-auto'>
-    <div className='flex justify-start'>
-      <img src={'/EcoAtende-branco.png'} alt="logo" className='w-20 md:w-28 h-7 md:h-9' />
-    </div>
-    
-    <nav className='hidden md:flex items-center justify-center gap-8'>
-      <a href="#inicio" className='text-white/70 hover:text-white transition-colors'>Início</a>
-      <a href="#precos" className='text-white/70 hover:text-white transition-colors'>Preços</a>
-      <a href="#sobre" className='text-white/70 hover:text-white transition-colors'>Sobre</a>
-      <a href="#contato" className='text-white/70 hover:text-white transition-colors'>Contato</a>
-    </nav>
-    
-    <div className='flex justify-end'>
-      <Link to='/login' className='px-4 md:px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-white/90 transition-all text-sm md:text-base'>
-        Login / Teste Grátis
-      </Link>
-    </div>
-  </div>
-</header>
+      <div className='flex items-center justify-between px-4 md:px-8 py-4 max-w-7xl mx-auto'>
+
+        {/* Logo */}
+        <img src={'/EcoAtende-branco.png'} alt="logo" className='w-20 md:w-28 h-7 md:h-9' />
+
+        {/* Menu Desktop */}
+        <nav className='hidden md:flex items-center justify-center gap-8'>
+          <a href="#inicio" className='text-white/70 hover:text-white transition-colors'>Início</a>
+          <a href="#precos" className='text-white/70 hover:text-white transition-colors'>Preços</a>
+          <a href="#sobre" className='text-white/70 hover:text-white transition-colors'>Sobre</a>
+          <a href="#contato" className='text-white/70 hover:text-white transition-colors'>Contato</a>
+        </nav>
+
+        {/* Botão Desktop */}
+        <div className='hidden md:flex'>
+          <Link to='/login' className='px-4 md:px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-white/90 transition-all text-sm md:text-base'>
+            Login / Cadastre-se
+          </Link>
+        </div>
+
+        {/* Ícone Menu Mobile */}
+        <button
+          className='md:hidden text-white'
+          onClick={() => setOpen(!open)}
+        >
+          {open ? <X size={26} /> : <Menu size={26} />}
+        </button>
+      </div>
+
+      {/* Menu Mobile */}
+      {open && (
+        <div className='md:hidden bg-black/95 border-b border-white/10 px-6 py-4 flex flex-col gap-4'>
+          <a onClick={() => setOpen(false)} href="#inicio" className='text-white/80 text-lg'>Início</a>
+          <a onClick={() => setOpen(false)} href="#precos" className='text-white/80 text-lg'>Preços</a>
+          <a onClick={() => setOpen(false)} href="#sobre" className='text-white/80 text-lg'>Sobre</a>
+          <a onClick={() => setOpen(false)} href="#contato" className='text-white/80 text-lg'>Contato</a>
+
+          <Link
+            to='/login'
+            onClick={() => setOpen(false)}
+            className='mt-3 px-4 py-2 bg-white text-black font-medium rounded-lg text-center text-base'
+          >
+            Login / Cadastre-se
+          </Link>
+        </div>
+      )}
+    </header>
 
       {/* Seção Início */}
       <section id="inicio" className='pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-8'>
@@ -61,9 +92,9 @@ export default function App() {
           </div>
           
           <div className='flex flex-col sm:flex-row gap-4 justify-center items-center px-4'>
-            <Link to='/login' className='w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-white text-black font-semibold rounded-lg hover:bg-white/90 transition-all text-sm md:text-base'>
+            <a href='#contato' className='w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-white text-black font-semibold rounded-lg hover:bg-white/90 transition-all text-sm md:text-base'>
               Teste Gratuitamente
-            </Link>
+            </a>
             <a href='#contato' className='w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 border border-white/20 text-white hover:bg-white/10 rounded-lg transition-all text-sm md:text-base'>
               Fale conosco
             </a>
@@ -76,7 +107,7 @@ export default function App() {
         <div className='max-w-6xl mx-auto'>
           {/* Primeiro Vídeo */}
           <div className='mb-12 md:mb-20'>
-            <video src={'/criar-ficha.mp4'} autoPlay muted loop className='w-full h-64 md:h-full object-contain rounded-xl md:rounded-2xl bg-white/5 border border-white/10' />
+            <video src={'/criar-ficha.mp4'} autoPlay muted loop className='w-full h-64 md:h-full object-contain rounded-xl md:rounded-2xl' />
             <div className='mt-6 md:mt-8 text-center px-4'>
               <h3 className='text-xl md:text-2xl font-semibold mb-3 md:mb-4'>Visualize os serviços de atendimento da sua empresa</h3>
               <p className='text-white/70 text-sm md:text-base'>Crie fichas de atendimento com a devida prioridade</p>
@@ -85,7 +116,7 @@ export default function App() {
 
           {/* Segundo Vídeo */}
           <div className='mb-12 md:mb-20'>
-            <video src={'/gerenciar-ficha.mp4'} autoPlay muted loop className='w-full h-64 md:h-full object-contain rounded-xl md:rounded-2xl bg-white/5 border border-white/10' />
+            <video src={'/gerenciar-ficha.mp4'} autoPlay muted loop className='w-full h-64 md:h-full object-contain rounded-xl md:rounded-2xl' />
             <div className='mt-6 md:mt-8 text-center px-4'>
               <h3 className='text-xl md:text-2xl font-semibold mb-3 md:mb-4'>Controle total sobre o fluxo de atendimento</h3>
               <p className='text-white/70 text-sm md:text-base'>Possibilidade de encerrar a distribuição de fichas</p>
@@ -94,7 +125,7 @@ export default function App() {
 
           {/* Terceiro Vídeo */}
           <div className='mb-12 md:mb-20'>
-            <video src={'/relatorio.mp4'} autoPlay muted loop className='w-full h-64 md:h-full object-contain rounded-xl md:rounded-2xl bg-white/5 border border-white/10' />
+            <video src={'/relatorio.mp4'} autoPlay muted loop className='w-full h-64 md:h-full object-contain rounded-xl md:rounded-2xl' />
             <div className='mt-6 md:mt-8 text-center px-4'>
               <h3 className='text-xl md:text-2xl font-semibold mb-3 md:mb-4'>Relatórios detalhados e insights valiosos</h3>
               <p className='text-white/70 text-sm md:text-base'>Tome decisões baseadas em dados reais</p>
@@ -103,7 +134,7 @@ export default function App() {
 
           {/* Quarto Vídeo */}
           <div className='mb-12 md:mb-20'>
-            <video src={'/painel.mp4'} autoPlay muted loop className='w-full h-64 md:h-full object-contain rounded-xl md:rounded-2xl bg-white/5 border border-white/10' />
+            <video src={'/painel.mp4'} autoPlay muted loop className='w-full h-64 md:h-full object-contain rounded-xl md:rounded-2xl' />
             <div className='mt-6 md:mt-8 text-center px-4'>
               <h3 className='text-xl md:text-2xl font-semibold mb-3 md:mb-4'>Painel de chamado de fichas por voz</h3>
               <p className='text-white/70 text-sm md:text-base'>Entretenha seus clientes enquanto aguardam</p>
@@ -216,7 +247,7 @@ export default function App() {
                   </div>
                   <div>
                     <div className='text-lg md:text-xl font-semibold mb-1'>Email</div>
-                    <div className='text-white/70 text-sm md:text-lg'>contato@ecoatende.com</div>
+                    <div className='text-white/70 text-sm md:text-lg'>jm.ss.saude@outlook.com</div>
                   </div>
                 </div>
                 <div className='flex items-center p-4 md:p-6 bg-white/5 rounded-lg md:rounded-xl border border-white/10'>
@@ -226,6 +257,7 @@ export default function App() {
                   <div>
                     <div className='text-lg md:text-xl font-semibold mb-1'>WhatsApp</div>
                     <div className='text-white/70 text-sm md:text-lg'>(81) 99687-8812</div>
+                    <div className='text-white/70 text-sm md:text-lg'>(81) 99908-7695</div>
                   </div>
                 </div>
               </div>

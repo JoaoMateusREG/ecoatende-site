@@ -285,11 +285,11 @@ export default function Dashboard() {
   return (
     <div className="bg-black text-white min-h-screen pt-14 pb-12 px-4 md:px-8">
       <div className="px-6 mx-auto">
-        <div className="flex justify-between items-center mb-8 md:mb-12">
+        <div className="flex flex-col-reverse md:flex-row md:justify-between md:items-center gap-4 mb-8 md:mb-12">
           <h1 className="text-4xl font-bold">
             {user?.organization?.name || "Conta"}
           </h1>
-          <div className="flex gap-4">
+          <div className="flex gap-4 justify-end md:justify-start">
             {!subscription && (
               <button
                 onClick={() => setShowModal(true)}
@@ -350,7 +350,7 @@ export default function Dashboard() {
                     Detalhes da Assinatura
                   </h2>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 scrollbar">
                   {subscription && (
                     <>
                       <button
@@ -415,7 +415,7 @@ export default function Dashboard() {
                 </h2>
               </div>
 
-              <div className="overflow-x-auto max-h-96">
+              <div className="overflow-x-auto max-h-96 scrollbar">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="text-sm uppercase text-white/50">
