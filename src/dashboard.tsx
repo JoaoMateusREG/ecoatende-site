@@ -350,7 +350,7 @@ export default function Dashboard() {
                     Detalhes da Assinatura
                   </h2>
                 </div>
-                <div className="flex items-center gap-2 scrollbar">
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-2 scrollbar">
                   {subscription && (
                     <>
                       <button
@@ -516,76 +516,76 @@ export default function Dashboard() {
       {/* Modal de Assinatura */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-gray-900 to-black border border-white/20 rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-white">
+          <div className="bg-gradient-to-br from-gray-900 to-black border border-white/20 rounded-2xl p-4 sm:p-6 max-w-md w-full shadow-2xl max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center mb-4 flex-shrink-0">
+              <h3 className="text-lg sm:text-2xl font-bold text-white">
                 Confirmar Assinatura
               </h3>
               <button
                 onClick={() => setShowModal(false)}
                 className="text-white/50 hover:text-white transition-colors"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </div>
 
-            <div className="space-y-4 mb-8">
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <p className="text-sm text-white/60 mb-2">Cliente</p>
-                <p className="text-white font-mono text-sm">
+            <div className="space-y-3 mb-4 overflow-y-auto flex-1">
+              <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                <p className="text-xs text-white/60 mb-1">Cliente</p>
+                <p className="text-white font-mono text-xs sm:text-sm">
                   {user?.organization?.name}
                 </p>
               </div>
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <p className="text-sm text-white/60 mb-2">CNPJ</p>
-                <p className="text-white font-mono text-sm">
+              <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                <p className="text-xs text-white/60 mb-1">CNPJ</p>
+                <p className="text-white font-mono text-xs sm:text-sm">
                   {user?.organization?.cnpj}
                 </p>
               </div>
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <p className="text-sm text-white/60 mb-2">Ciclo de pagamento</p>
-                <p className="text-white font-mono text-sm">MENSAL</p>
+              <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                <p className="text-xs text-white/60 mb-1">Ciclo de pagamento</p>
+                <p className="text-white font-mono text-xs sm:text-sm">MENSAL</p>
               </div>
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <p className="text-sm text-white/60 mb-2">
+              <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                <p className="text-xs text-white/60 mb-1">
                   Métodos de pagamento
                 </p>
-                <p className="text-white font-mono text-sm">
+                <p className="text-white font-mono text-xs sm:text-sm">
                   Boleto, PIX e Cartão de Crédito
                 </p>
               </div>
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <p className="text-sm text-white/60 mb-2">Primeiro pagamento</p>
-                <p className="text-white font-mono text-sm">Hoje</p>
+              <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                <p className="text-xs text-white/60 mb-1">Primeiro pagamento</p>
+                <p className="text-white font-mono text-xs sm:text-sm">Hoje</p>
               </div>
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <p className="text-sm text-white/60 mb-2">
+              <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                <p className="text-xs text-white/60 mb-1">
                   Valor da assinatura
                 </p>
-                <p className="text-white font-mono text-sm">R$ 99,00</p>
+                <p className="text-white font-mono text-xs sm:text-sm">R$ 99,00</p>
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3 flex-shrink-0">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-3 bg-white/5 text-white border border-white/10 rounded-lg hover:bg-white/10 transition-colors font-medium"
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-white/5 text-white border border-white/10 rounded-lg hover:bg-white/10 transition-colors font-medium text-sm"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSubscribe}
                 disabled={subscribing}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 {subscribing ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Processando...
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span className="hidden sm:inline">Processando...</span>
                   </>
                 ) : (
                   <>
-                    <Check size={20} />
+                    <Check size={18} />
                     Confirmar
                   </>
                 )}
